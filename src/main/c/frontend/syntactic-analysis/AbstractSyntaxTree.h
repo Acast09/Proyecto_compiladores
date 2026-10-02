@@ -3,76 +3,95 @@
 
 #include "../../support/logging/Logger.h"
 #include "../../support/type/ModuleDestructor.h"
+
 #include <stdlib.h>
 
-/** Initialize module's internal state. */
 ModuleDestructor initializeAbstractSyntaxTreeModule();
 
-/**
- * This type definitions allows self-referencing types (e.g., an expression
- * that is made of another expressions, such as talking about you in 3rd
- * person, but without the madness).
- */
+typedef enum DeviceType DeviceType;
 
-typedef enum ExpressionType ExpressionType;
-typedef enum FactorType FactorType;
-
-typedef struct Constant Constant;
-typedef struct Expression Expression;
-typedef struct Factor Factor;
+typedef struct Network Network;
+typedef struct Interface Interface;
+typedef struct Route Route;
+typedef struct Device Device;
+typedef struct Endpoint Endpoint;
+typedef struct Connection Connection;
+typedef struct Topology Topology;
 typedef struct Program Program;
 
-/**
- * Node types for the Abstract Syntax Tree (AST).
- */
-
-enum ExpressionType {
-	ADDITION,
-	DIVISION,
-	FACTOR,
-	MULTIPLICATION,
-	SUBTRACTION
+enum DeviceType {
+    DEVICE_ROUTER,
+    DEVICE_SWITCH,
+    DEVICE_HOST
 };
 
-enum FactorType {
-	CONSTANT,
-	EXPRESSION
+struct Network {
+    char * name;
+    char * cidr;
+    Network * next;
 };
 
-struct Constant {
-	int value;
+struct Interface {
+    char * name;
+    char * cidr;
+    char * network;
+    Interface * next;
 };
 
-struct Factor {
-	union {
-		Constant * constant;
-		Expression * expression;
-	};
-	FactorType type;
+struct Route {
+    char * destination;
+    char * nextHop;
+    Route * next;
 };
 
-struct Expression {
-	union {
-		Factor * factor;
-		struct {
-			Expression * leftExpression;
-			Expression * rightExpression;
-		};
-	};
-	ExpressionType type;
+struct Device {
+    DeviceType type;
+    char * name;
+
+    Interface * interfaces;
+    Route * routes;
+
+    Device * next;
+};
+
+struct Endpoint {
+    char * device;
+    char * interface;
+};
+
+struct Connection {
+    Endpoint * source;
+    Endpoint * target;
+
+    Connection * next;
+};
+
+struct Topology {
+    char * name;
+
+    Network * networks;
+    Device * devices;
+    Connection * connections;
 };
 
 struct Program {
-	Expression * expression;
+    Topology * topology;
 };
 
-/**
- * Node recursive super-duper-trambolik-destructors.
- */
+void destroyNetwork(Network * network);
 
-void destroyConstant(Constant * constant);
-void destroyExpression(Expression * expression);
-void destroyFactor(Factor * factor);
+void destroyInterface(Interface * interface);
+
+void destroyRoute(Route * route);
+
+void destroyDevice(Device * device);
+
+void destroyEndpoint(Endpoint * endpoint);
+
+void destroyConnection(Connection * connection);
+
+void destroyTopology(Topology * topology);
+
 void destroyProgram(Program * program);
 
 #endif

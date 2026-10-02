@@ -5,22 +5,130 @@
 #include "../../support/type/CompilerState.h"
 #include "../../support/type/ModuleDestructor.h"
 #include "../../support/type/TokenLabel.h"
+
 #include "AbstractSyntaxTree.h"
 #include "BisonParser.h"
+
 #include <stdlib.h>
 
-/** Initialize module's internal state. */
-ModuleDestructor initializeBisonActionsModule();
+ModuleDestructor initializeBisonActionsModule(
+    CompilerState * compilerState
+);
 
-/**
- * Bison semantic actions.
- */
+/* STRING */
 
-Constant * IntegerConstantSemanticAction(const int value);
-Expression * ArithmeticExpressionSemanticAction(Expression * leftExpression, Expression * rightExpression, ExpressionType type);
-Expression * FactorExpressionSemanticAction(Factor * factor);
-Factor * ConstantFactorSemanticAction(Constant * constant);
-Factor * ExpressionFactorSemanticAction(Expression * expression);
-Program * ExpressionProgramSemanticAction(Expression * expression);
+char * StringSemanticAction(
+    const char * value
+);
+
+/* NETWORK */
+
+Network * NetworkSemanticAction(
+    char * name,
+    char * cidr
+);
+
+/* INTERFACE */
+
+Interface * InterfaceWithCidrSemanticAction(
+    char * name,
+    char * cidr,
+    char * network
+);
+
+Interface * InterfaceWithoutCidrSemanticAction(
+    char * name,
+    char * network
+);
+
+Interface * InterfaceListSemanticAction(
+    Interface * list,
+    Interface * interface
+);
+
+/* ROUTE */
+
+Route * RouteSemanticAction(
+    char * destination,
+    char * nextHop
+);
+
+/* DEVICE */
+
+Device * RouterSemanticAction(
+    char * name,
+    Device * elements
+);
+
+Device * SwitchSemanticAction(
+    char * name,
+    Interface * interfaces
+);
+
+Device * HostSemanticAction(
+    char * name,
+    Interface * interfaces
+);
+
+/* DEVICE ELEMENT ACCUMULATOR */
+
+Device * EmptyDeviceSemanticAction();
+
+Device * MergeDeviceSemanticAction(
+    Device * device,
+    Device * element
+);
+
+Device * InterfaceDeviceElementSemanticAction(
+    Interface * interface
+);
+
+Device * RouteDeviceElementSemanticAction(
+    Route * route
+);
+
+/* ENDPOINT / CONNECTION */
+
+Endpoint * EndpointSemanticAction(
+    char * device,
+    char * interface
+);
+
+Connection * ConnectionSemanticAction(
+    Endpoint * source,
+    Endpoint * target
+);
+
+/* TOPOLOGY ACCUMULATOR */
+
+Topology * EmptyTopologySemanticAction();
+
+Topology * MergeTopologySemanticAction(
+    Topology * topology,
+    Topology * element
+);
+
+Topology * NetworkTopologyElementSemanticAction(
+    Network * network
+);
+
+Topology * DeviceTopologyElementSemanticAction(
+    Device * device
+);
+
+Topology * ConnectionTopologyElementSemanticAction(
+    Connection * connection
+);
+
+/* TOPOLOGY */
+
+Topology * TopologySemanticAction(
+    char * name,
+    Topology * elements
+);
+
+Program * TopologyProgramSemanticAction(
+    Topology * topology
+);
 
 #endif

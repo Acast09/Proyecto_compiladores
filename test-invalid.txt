@@ -1,0 +1,10 @@
+topology Campus {
+
+    network LAN_A 192.168.1.0/24
+
+    router R1 {
+        interface eth0 192.168.1.1/24 network LAN_A
+    }
+
+    connect R1.eth0
+}

@@ -68,13 +68,41 @@ LexicalAnalyzer * createLexicalAnalyzer() {
 
 Token * createToken(LexicalAnalyzer * lexicalAnalyzer, TokenLabel label) {
 	Token * token = (Token *) calloc(1, sizeof(Token));
+
 	token->context = flexCurrentContext(lexicalAnalyzer);
 	token->label = label;
 	token->length = yyget_leng(lexicalAnalyzer->scanner);
-	token->lexeme = (char *) calloc(token->length + 1, sizeof(char));
 	token->line = yyget_lineno(lexicalAnalyzer->scanner);
-	token->semanticValue = (SemanticValue *) calloc(1, sizeof(SemanticValue));
-	strncpy(token->lexeme, yyget_text(lexicalAnalyzer->scanner), token->length);
+
+	token->lexeme = (char *) calloc(
+		token->length + 1,
+		sizeof(char)
+	);
+
+	token->line = yyget_lineno(
+        lexicalAnalyzer->scanner
+    );
+
+	token->semanticValue = (SemanticValue *) calloc(
+		1,
+		sizeof(SemanticValue)
+	);
+
+	strncpy(
+		token->lexeme,
+		yyget_text(lexicalAnalyzer->scanner),
+		token->length
+	);
+
+	/*
+	 * The semantic value temporarily references the token lexeme.
+	 *
+	 * Bison processes the token synchronously inside yypush_parse().
+	 * The semantic actions copy the value into the AST before
+	 * destroyToken() releases the lexeme.
+	 */
+	token->semanticValue->string = token->lexeme;
+
 	return token;
 }
 

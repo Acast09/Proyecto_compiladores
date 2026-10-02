@@ -10,80 +10,57 @@
 
 %{
 
-/**
- * @see https://westes.github.io/flex/manual/Definitions-Section.html#Definitions-Section
- */
-
-extern CompilationStatus ArithmeticOperatorLexemeAction(TokenLabel label);
-extern CompilationStatus EnterImportExpressionLexemeAction(FlexContext context);
-extern CompilationStatus EnterMultilineCommentLexemeAction(FlexContext context);
+extern CompilationStatus TokenLexemeAction(TokenLabel label);
 extern CompilationStatus EOFLexemeAction();
 extern CompilationStatus IgnoredLexemeAction();
-extern CompilationStatus IntegerLexemeAction();
-extern CompilationStatus LeaveImportExpressionLexemeAction();
+extern CompilationStatus IPCidrLexemeAction();
+extern CompilationStatus IPAddressLexemeAction();
+extern CompilationStatus IdentifierLexemeAction();
+extern CompilationStatus EnterMultilineCommentLexemeAction(FlexContext context);
 extern CompilationStatus LeaveMultilineCommentLexemeAction();
-extern CompilationStatus ParenthesisLexemeAction(TokenLabel label);
-extern CompilationStatus SubexpressionLexemeAction();
 extern CompilationStatus UnknownLexemeAction();
 
 %}
 
-/**
- * Flex contexts (a.k.a. start conditions).
- *
- * @see https://westes.github.io/flex/manual/Start-Conditions.html
- */
-%x IMPORT_EXPRESSION
 %x MULTILINE_COMMENT
 
-/**
- * Reusable patterns.
- *
- * @see https://westes.github.io/flex/manual/Matching.html
- * @see https://westes.github.io/flex/manual/Patterns.html
- */
-whitespace			[[:space:]]+
+whitespace [[:space:]]+
+ipv4_octet [[:digit:]]+
+ipv4_address {ipv4_octet}"."{ipv4_octet}"."{ipv4_octet}"."{ipv4_octet}
+ipv4_cidr {ipv4_address}"/"[[:digit:]]+
+identifier [A-Za-z_][A-Za-z0-9_]*
 
 %%
 
-%{
+"topology"                              { return TokenLexemeAction(TOPOLOGY); }
+"network"                               { return TokenLexemeAction(NETWORK); }
+"router"                                { return TokenLexemeAction(ROUTER); }
+"switch"                                { return TokenLexemeAction(SWITCH); }
+"host"                                  { return TokenLexemeAction(HOST); }
+"interface"                             { return TokenLexemeAction(INTERFACE); }
+"connect"                               { return TokenLexemeAction(CONNECT); }
+"route"                                 { return TokenLexemeAction(ROUTE); }
+"via"                                   { return TokenLexemeAction(VIA); }
 
-/**
- * @see https://westes.github.io/flex/manual/Rules-Section.html#Rules-Section
- */
+"/*"                                    { return EnterMultilineCommentLexemeAction(MULTILINE_COMMENT); }
+<MULTILINE_COMMENT>"*/"                 { return LeaveMultilineCommentLexemeAction(); }
+<MULTILINE_COMMENT>[^*]+                { return IgnoredLexemeAction(); }
+<MULTILINE_COMMENT>.                    { return IgnoredLexemeAction(); }
 
-%}
+{ipv4_cidr}                             { return IPCidrLexemeAction(); }
+{ipv4_address}                           { return IPAddressLexemeAction(); }
+{identifier}                             { return IdentifierLexemeAction(); }
 
-"{"									{ return EnterImportExpressionLexemeAction(IMPORT_EXPRESSION); }
-<IMPORT_EXPRESSION>[^{}]+			{ return SubexpressionLexemeAction(); }
-<IMPORT_EXPRESSION>"}"				{ return LeaveImportExpressionLexemeAction(); }
-<IMPORT_EXPRESSION>.				{ return UnknownLexemeAction(); }
+"{"                                     { return TokenLexemeAction(OPEN_BRACE); }
+"}"                                     { return TokenLexemeAction(CLOSE_BRACE); }
+"."                                     { return TokenLexemeAction(DOT); }
 
-"/*"								{ return EnterMultilineCommentLexemeAction(MULTILINE_COMMENT); }
-<MULTILINE_COMMENT>"*/"				{ return LeaveMultilineCommentLexemeAction(); }
-<MULTILINE_COMMENT>[^*]+			{ return IgnoredLexemeAction(); }
-<MULTILINE_COMMENT>.				{ return IgnoredLexemeAction(); }
+{whitespace}                            { return IgnoredLexemeAction(); }
+.                                       { return UnknownLexemeAction(); }
 
-"-"									{ return ArithmeticOperatorLexemeAction(SUB); }
-"*"									{ return ArithmeticOperatorLexemeAction(MUL); }
-"/"									{ return ArithmeticOperatorLexemeAction(DIV); }
-"+"									{ return ArithmeticOperatorLexemeAction(ADD); }
-
-"("									{ return ParenthesisLexemeAction(OPEN_PARENTHESIS); }
-")"									{ return ParenthesisLexemeAction(CLOSE_PARENTHESIS); }
-
-[[:digit:]]+						{ return IntegerLexemeAction(); }
-
-{whitespace}						{ return IgnoredLexemeAction(); }
-.									{ return UnknownLexemeAction(); }
-
-<<EOF>>								{ return EOFLexemeAction(); }
+<<EOF>>                                 { return EOFLexemeAction(); }
 
 %%
-
-/**
- * @see https://westes.github.io/flex/manual/User-Code-Section.html#User-Code-Section
- */
 
 #include "FlexActions.h"
 #include "FlexExport.h"

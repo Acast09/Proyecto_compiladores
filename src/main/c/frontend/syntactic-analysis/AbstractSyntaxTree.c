@@ -4,67 +4,160 @@
 
 static Logger * _logger = NULL;
 
-/** Shutdown module's internal state. */
 void _shutdownAbstractSyntaxTreeModule() {
-	if (_logger != NULL) {
-		logDebugging(_logger, "Destroying module: AbstractSyntaxTree...");
-		destroyLogger(_logger);
-		_logger = NULL;
-	}
+    if (_logger != NULL) {
+        logDebugging(
+            _logger,
+            "Destroying module: AbstractSyntaxTree..."
+        );
+
+        destroyLogger(_logger);
+        _logger = NULL;
+    }
 }
 
 ModuleDestructor initializeAbstractSyntaxTreeModule() {
-	_logger = createLogger("AbstractSyntaxTree");
-	return _shutdownAbstractSyntaxTreeModule;
+    _logger = createLogger("AbstractSyntaxTree");
+
+    return _shutdownAbstractSyntaxTreeModule;
 }
 
-/* PUBLIC FUNCTIONS */
+void destroyNetwork(Network * network) {
+    logDebugging(
+        _logger,
+        "Executing destructor: %s",
+        __FUNCTION__
+    );
 
-void destroyConstant(Constant * constant) {
-	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
-	if (constant != NULL) {
-		free(constant);
-	}
+    while (network != NULL) {
+        Network * next = network->next;
+
+        free(network->name);
+        free(network->cidr);
+        free(network);
+
+        network = next;
+    }
 }
 
-void destroyExpression(Expression * expression) {
-	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
-	if (expression != NULL) {
-		switch (expression->type) {
-			case ADDITION:
-			case DIVISION:
-			case MULTIPLICATION:
-			case SUBTRACTION:
-				destroyExpression(expression->leftExpression);
-				destroyExpression(expression->rightExpression);
-				break;
-			case FACTOR:
-				destroyFactor(expression->factor);
-				break;
-		}
-		free(expression);
-	}
+void destroyInterface(Interface * interface) {
+    logDebugging(
+        _logger,
+        "Executing destructor: %s",
+        __FUNCTION__
+    );
+
+    while (interface != NULL) {
+        Interface * next = interface->next;
+
+        free(interface->name);
+        free(interface->cidr);
+        free(interface->network);
+        free(interface);
+
+        interface = next;
+    }
 }
 
-void destroyFactor(Factor * factor) {
-	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
-	if (factor != NULL) {
-		switch (factor->type) {
-			case CONSTANT:
-				destroyConstant(factor->constant);
-				break;
-			case EXPRESSION:
-				destroyExpression(factor->expression);
-				break;
-		}
-		free(factor);
-	}
+void destroyRoute(Route * route) {
+    logDebugging(
+        _logger,
+        "Executing destructor: %s",
+        __FUNCTION__
+    );
+
+    while (route != NULL) {
+        Route * next = route->next;
+
+        free(route->destination);
+        free(route->nextHop);
+        free(route);
+
+        route = next;
+    }
+}
+
+void destroyDevice(Device * device) {
+    logDebugging(
+        _logger,
+        "Executing destructor: %s",
+        __FUNCTION__
+    );
+
+    while (device != NULL) {
+        Device * next = device->next;
+
+        free(device->name);
+
+        destroyInterface(device->interfaces);
+        destroyRoute(device->routes);
+
+        free(device);
+
+        device = next;
+    }
+}
+
+void destroyEndpoint(Endpoint * endpoint) {
+    logDebugging(
+        _logger,
+        "Executing destructor: %s",
+        __FUNCTION__
+    );
+
+    if (endpoint != NULL) {
+        free(endpoint->device);
+        free(endpoint->interface);
+        free(endpoint);
+    }
+}
+
+void destroyConnection(Connection * connection) {
+    logDebugging(
+        _logger,
+        "Executing destructor: %s",
+        __FUNCTION__
+    );
+
+    while (connection != NULL) {
+        Connection * next = connection->next;
+
+        destroyEndpoint(connection->source);
+        destroyEndpoint(connection->target);
+
+        free(connection);
+
+        connection = next;
+    }
+}
+
+void destroyTopology(Topology * topology) {
+    logDebugging(
+        _logger,
+        "Executing destructor: %s",
+        __FUNCTION__
+    );
+
+    if (topology != NULL) {
+        free(topology->name);
+
+        destroyNetwork(topology->networks);
+        destroyDevice(topology->devices);
+        destroyConnection(topology->connections);
+
+        free(topology);
+    }
 }
 
 void destroyProgram(Program * program) {
-	logDebugging(_logger, "Executing destructor: %s", __FUNCTION__);
-	if (program != NULL) {
-		destroyExpression(program->expression);
-		free(program);
-	}
+    logDebugging(
+        _logger,
+        "Executing destructor: %s",
+        __FUNCTION__
+    );
+
+    if (program != NULL) {
+        destroyTopology(program->topology);
+        free(program);
+    }
 }
