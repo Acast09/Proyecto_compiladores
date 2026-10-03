@@ -16,64 +16,49 @@ Compiler developed with Flex and Bison for a domain-specific language (DSL) focu
 
 * [Docker v28.3.2](https://www.docker.com/)
 
-## Grammar
+## Formal Grammar
 
-The language is defined by a context-free grammar:
-G = <Σ, N, Π, S>
+The language is formally defined by the grammar:
 
-### Terminals (Σ)
+**G = <Σ, N, Π, S>**
 
-The terminal symbols include the language keywords, identifiers, IP addresses, CIDR addresses and punctuation symbols:
+where:
 
-topology
-network
-router
-switch
-host
-interface
-connect
-route
-via
-IDENTIFIER
-IP_ADDRESS
-IP_CIDR
-{
-}
-.
+- **Σ** is the set of terminal symbols.
+- **N** is the set of non-terminal symbols.
+- **Π** is the set of production rules.
+- **S** is the start symbol.
 
-### Non-terminals (N)
+### Terminal Symbols
 
-The main non-terminal symbols are:
+| Category | Terminal symbols |
+|---|---|
+| Keywords | `topology`, `network`, `router`, `switch`, `host`, `interface`, `connect`, `route`, `via` |
+| Identifiers | `IDENTIFIER` |
+| IP addresses | `IP_ADDRESS` |
+| CIDR addresses | `IP_CIDR` |
+| Punctuation | `{`, `}`, `.` |
 
-program
-topology
-topology_elements
-topology_element
-network_definition
-device_definition
-router_definition
-switch_definition
-host_definition
-router_elements
-router_element
-interface_definitions
-interface_definition
-route_definition
-connection_definition
-endpoint
-identifier
-ip_address
-ip_cidr
+### Non-Terminal Symbols
 
-### Productions (Π)
+| Category | Non-terminal symbols |
+|---|---|
+| Program structure | `program`, `topology`, `topology_elements`, `topology_element` |
+| Network definitions | `network_definition` |
+| Device definitions | `device_definition`, `router_definition`, `switch_definition`, `host_definition` |
+| Router elements | `router_elements`, `router_element` |
+| Interface definitions | `interface_definitions`, `interface_definition` |
+| Routing | `route_definition` |
+| Connections | `connection_definition`, `endpoint` |
+| Basic values | `identifier`, `ip_address`, `ip_cidr` |
 
-The productions of the grammar are implemented in:
+### Production Rules
 
-src/main/c/frontend/syntactic-analysis/BisonGrammar.y
+The production rules are implemented in:
 
-The start symbol is:
+`src/main/c/frontend/syntactic-analysis/BisonGrammar.y`
 
-S = program
+The start symbol of the grammar is `program`.
 
 ## Configuration
 
