@@ -4,7 +4,7 @@
 
 # Flex-Bison-Compiler
 
-A base compiler example, developed with Flex and Bison.
+Compiler developed with Flex and Bison for a domain-specific language (DSL) focused on the definition of computer network topologies.
 
 * [Requirements](#requirements)
 * [Configuration](#configuration)
@@ -15,6 +15,65 @@ A base compiler example, developed with Flex and Bison.
 ## Requirements
 
 * [Docker v28.3.2](https://www.docker.com/)
+
+## Grammar
+
+The language is defined by a context-free grammar:
+G = <Σ, N, Π, S>
+
+### Terminals (Σ)
+
+The terminal symbols include the language keywords, identifiers, IP addresses, CIDR addresses and punctuation symbols:
+
+topology
+network
+router
+switch
+host
+interface
+connect
+route
+via
+IDENTIFIER
+IP_ADDRESS
+IP_CIDR
+{
+}
+.
+
+### Non-terminals (N)
+
+The main non-terminal symbols are:
+
+program
+topology
+topology_elements
+topology_element
+network_definition
+device_definition
+router_definition
+switch_definition
+host_definition
+router_elements
+router_element
+interface_definitions
+interface_definition
+route_definition
+connection_definition
+endpoint
+identifier
+ip_address
+ip_cidr
+
+### Productions (Π)
+
+The productions of the grammar are implemented in:
+
+src/main/c/frontend/syntactic-analysis/BisonGrammar.y
+
+The start symbol is:
+
+S = program
 
 ## Configuration
 

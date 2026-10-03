@@ -1,0 +1,31 @@
+topology Campus {
+
+    network LAN_A 192.168.1.0/24
+    network LAN_B 192.168.2.0/24
+
+    router R1 {
+        interface eth0 192.168.1.1/24 network LAN_A
+        interface eth1 192.168.2.1/24 network LAN_B
+
+        route 192.168.2.0/24 via 192.168.2.254
+    }
+
+    switch SW1 {
+        interface port1 network LAN_A
+        interface port2 network LAN_A
+        interface port3 network LAN_A
+    }
+
+    host PC1 {
+        interface eth0 192.168.1.10/24 network LAN_A
+    }
+
+    host PC2 {
+        interface eth0 192.168.1.11/24 network LAN_A
+    }
+
+    connect R1.eth0 SW1.port1
+    connect PC1.eth0 SW1.port2
+    connect PC2.eth0 SW1.port3
+
+}

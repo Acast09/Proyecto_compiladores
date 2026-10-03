@@ -1,0 +1,11 @@
+topology Campus {
+
+    network LAN_A 192.168.1.0/24
+
+    switch SW1 {
+        interface port1 network LAN_A
+        interface port2 network LAN_A
+        interface port3 network LAN_A
+    }
+
+}
