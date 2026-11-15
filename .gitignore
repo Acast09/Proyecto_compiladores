@@ -25,3 +25,7 @@ BisonParser.c
 BisonParser.h
 FlexScanner.c
 FlexScanner.h
+
+# Generated Graphviz files
+topology.dot
+topology.svg

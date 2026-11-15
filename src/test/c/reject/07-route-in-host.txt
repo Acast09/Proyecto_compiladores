@@ -1,0 +1,11 @@
+topology InvalidHostRoute {
+
+    network LAN_A 192.168.1.0/24
+
+    host PC1 {
+        interface eth0 192.168.1.10/24 network LAN_A
+
+        route 192.168.2.0/24 via 192.168.1.1
+    }
+
+}

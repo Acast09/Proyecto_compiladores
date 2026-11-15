@@ -1,0 +1,39 @@
+topology LargeCampus {
+
+    network LAN_A 192.168.1.0/24
+
+    router R1 {
+        interface eth0 192.168.1.1/24 network LAN_A
+    }
+
+    switch SW1 {
+        interface port1 network LAN_A
+        interface port2 network LAN_A
+        interface port3 network LAN_A
+        interface port4 network LAN_A
+        interface port5 network LAN_A
+    }
+
+    host PC1 {
+        interface eth0 192.168.1.10/24 network LAN_A
+    }
+
+    host PC2 {
+        interface eth0 192.168.1.11/24 network LAN_A
+    }
+
+    host PC3 {
+        interface eth0 192.168.1.12/24 network LAN_A
+    }
+
+    host PC4 {
+        interface eth0 192.168.1.13/24 network LAN_A
+    }
+
+    connect R1.eth0 SW1.port1
+    connect PC1.eth0 SW1.port2
+    connect PC2.eth0 SW1.port3
+    connect PC3.eth0 SW1.port4
+    connect PC4.eth0 SW1.port5
+
+}

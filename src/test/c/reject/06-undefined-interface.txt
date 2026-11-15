@@ -1,4 +1,4 @@
-topology Campus {
+topology UndefinedInterface {
 
     network LAN_A 192.168.1.0/24
 
@@ -10,6 +10,6 @@ topology Campus {
         interface port1 network LAN_A
     }
 
-    connect R1 eth0 SW1.port1
+    connect R1.eth9 SW1.port1
 
 }
