@@ -21,6 +21,11 @@ char * StringSemanticAction(
     const char * value
 );
 
+char * CidrWithSubnetMaskSemanticAction(
+    char * address,
+    char * mask
+);
+
 /* NETWORK */
 
 Network * NetworkSemanticAction(

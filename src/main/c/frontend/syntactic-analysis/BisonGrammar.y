@@ -103,6 +103,7 @@ static void yyerror(
     identifier
     ip_address
     ip_cidr
+    ip_configuration
 
 /* DESTRUCTORS */
 
@@ -206,7 +207,7 @@ topology_element
  */
 
 network_definition
-    : NETWORK identifier ip_cidr
+    : NETWORK identifier ip_configuration
         {
             $$ = NetworkSemanticAction(
                 $2,
@@ -325,7 +326,7 @@ interface_definitions
     ;
 
 interface_definition
-    : INTERFACE identifier ip_cidr NETWORK identifier
+    : INTERFACE identifier ip_configuration NETWORK identifier
         {
             $$ = InterfaceWithCidrSemanticAction(
                 $2,
@@ -408,6 +409,21 @@ ip_cidr
         {
             $$ = StringSemanticAction(
                 $1
+            );
+        }
+    ;
+
+ip_configuration
+    : ip_cidr
+        {
+            $$ = $1;
+        }
+
+    | ip_address ip_address
+        {
+            $$ = CidrWithSubnetMaskSemanticAction(
+                $1,
+                $2
             );
         }
     ;

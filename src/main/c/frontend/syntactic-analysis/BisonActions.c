@@ -68,6 +68,40 @@ char * StringSemanticAction(
     return string;
 }
 
+char * CidrWithSubnetMaskSemanticAction(
+    char * address,
+    char * mask
+) {
+    _logSyntacticAnalyzerAction(__FUNCTION__);
+
+    if (address == NULL || mask == NULL) {
+        free(address);
+        free(mask);
+        return NULL;
+    }
+
+    size_t length =
+        strlen(address) + strlen(mask) + 2;
+
+    char * cidr =
+        calloc(length, sizeof(char));
+
+    if (cidr != NULL) {
+        snprintf(
+            cidr,
+            length,
+            "%s/%s",
+            address,
+            mask
+        );
+    }
+
+    free(address);
+    free(mask);
+
+    return cidr;
+}
+
 /* APPEND HELPERS */
 
 static Network * _appendNetwork(

@@ -1,0 +1,5 @@
+topology InvalidCIDR {
+
+    network LAN_A 192.168.1.0/33
+
+}
