@@ -16,6 +16,7 @@ jobs:
             cmake \
             flex \
             gcc \
+            graphviz \
             make
           chmod u+x --recursive src/main/bash
       - name: "Build."
