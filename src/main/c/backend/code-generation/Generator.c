@@ -140,6 +140,58 @@ static bool _findDeviceIndex(
 }
 
 /**
+ * Returns the network name if all assigned interfaces of a device
+ * belong to exactly one network.
+ *
+ * Returns NULL if the device has no assigned network or belongs
+ * to more than one network.
+ */
+static const char * _getExclusiveNetworkName(const Device * device) {
+    const char * networkName = NULL;
+
+    if (device == NULL || device->type == DEVICE_ROUTER) {
+        return NULL;
+    }
+
+    for (
+        const Interface * interface = device->interfaces;
+        interface != NULL;
+        interface = interface->next
+    ) {
+        if (interface->network == NULL) {
+            continue;
+        }
+
+        if (networkName == NULL) {
+            networkName = interface->network;
+        } else if (strcmp(networkName, interface->network) != 0) {
+            return NULL;
+        }
+    }
+
+    return networkName;
+}
+
+/**
+ * Returns the fill color associated with a device type.
+ */
+static const char * _getDeviceFillColor(DeviceType type) {
+    switch (type) {
+        case DEVICE_ROUTER:
+            return "#DCEBFA";
+
+        case DEVICE_SWITCH:
+            return "#DDF3EC";
+
+        case DEVICE_HOST:
+            return "#E9EDF2";
+
+        default:
+            return "#FFFFFF";
+    }
+}
+
+/**
  * Writes a device and its interfaces and static routes.
  */
 static void _writeDeviceNode(
@@ -149,9 +201,13 @@ static void _writeDeviceNode(
 ) {
     fprintf(
         output,
-        "    device_%zu [shape=%s, label=\"",
+        "    device_%zu [shape=%s, style=filled, "
+        "fillcolor=\"%s\", color=\"#64748B\", "
+        "fontname=\"Helvetica\", fontcolor=\"#243447\", "
+        "penwidth=1.5, label=\"",
         index,
-        _getDeviceShape(device->type)
+        _getDeviceShape(device->type),
+        _getDeviceFillColor(device->type)
     );
 
     _writeEscapedString(output, device->name);
@@ -205,32 +261,35 @@ static void _writeDeviceNode(
 }
 
 /**
- * Writes all network nodes.
+ * Writes network clusters and their exclusively assigned devices.
  */
-static void _writeNetworkNodes(
+static void _writeNetworkClusters(
     FILE * output,
     const Topology * topology
 ) {
+    size_t networkIndex = 0;
+
     for (
         const Network * network = topology->networks;
         network != NULL;
         network = network->next
     ) {
-        size_t index = 0;
-
-        for (
-            const Network * current = topology->networks;
-            current != network;
-            current = current->next
-        ) {
-            ++index;
-        }
-
         fprintf(
             output,
-            "    network_%zu [shape=folder, style=filled, "
-            "fillcolor=lightblue, label=\"",
-            index
+            "    subgraph cluster_network_%zu {\n",
+            networkIndex
+        );
+
+        fputs(
+            "        style=\"rounded,filled\";\n"
+            "        color=\"#A9C7E5\";\n"
+            "        fillcolor=\"#F2F7FC\";\n"
+            "        penwidth=1.5;\n"
+            "        fontname=\"Helvetica\";\n"
+            "        fontcolor=\"#315477\";\n"
+            "        fontsize=14;\n"
+            "        label=\"",
+            output
         );
 
         _writeEscapedString(output, network->name);
@@ -238,7 +297,72 @@ static void _writeNetworkNodes(
         fputs("\\n", output);
         _writeEscapedString(output, network->cidr);
 
+        fputs("\";\n", output);
+
+        /* Network node inside its cluster. */
+
+        fprintf(
+            output,
+            "        network_%zu "
+            "[shape=folder, style=filled, "
+            "fillcolor=\"#FFFFFF\", color=\"#8BAECC\", "
+            "fontname=\"Helvetica\", label=\"",
+            networkIndex
+        );
+
+        _writeEscapedString(output, network->name);
+
         fputs("\"];\n", output);
+
+        /* Devices belonging exclusively to this network. */
+
+        size_t deviceIndex = 0;
+
+        for (
+            const Device * device = topology->devices;
+            device != NULL;
+            device = device->next
+        ) {
+            const char * assignedNetwork =
+                _getExclusiveNetworkName(device);
+
+            if (
+                assignedNetwork != NULL &&
+                network->name != NULL &&
+                strcmp(assignedNetwork, network->name) == 0
+            ) {
+                _writeDeviceNode(output, device, deviceIndex);
+            }
+
+            ++deviceIndex;
+        }
+
+        fputs("    }\n\n", output);
+
+        ++networkIndex;
+    }
+}
+
+/**
+ * Writes devices that must remain outside network clusters.
+ * This includes routers and devices belonging to multiple networks.
+ */
+static void _writeExternalDeviceNodes(
+    FILE * output,
+    const Topology * topology
+) {
+    size_t deviceIndex = 0;
+
+    for (
+        const Device * device = topology->devices;
+        device != NULL;
+        device = device->next
+    ) {
+        if (_getExclusiveNetworkName(device) == NULL) {
+            _writeDeviceNode(output, device, deviceIndex);
+        }
+
+        ++deviceIndex;
     }
 }
 
@@ -337,7 +461,9 @@ static bool _writePhysicalConnections(
 
         fprintf(
             output,
-            "    device_%zu -> device_%zu [label=\"",
+            "    device_%zu -> device_%zu "
+            "[dir=none, color=\"#526273\", penwidth=1.6, "
+            "fontname=\"Helvetica\", fontcolor=\"#475569\", label=\"",
             sourceIndex,
             targetIndex
         );
@@ -407,28 +533,45 @@ CompilationStatus executeGenerator(
     _writeEscapedString(output, topology->name);
     fputs("\" {\n", output);
 
-    fputs("    graph [rankdir=LR, splines=true];\n", output);
-    fputs("    node [style=filled, fillcolor=white];\n", output);
-    fputs("    edge [color=gray40];\n\n", output);
+        fputs(
+        "    graph ["
+        "rankdir=LR, "
+        "splines=polyline, "
+        "nodesep=0.65, "
+        "ranksep=1.0, "
+        "pad=0.35, "
+        "compound=true, "
+        "fontname=\"Helvetica\", "
+        "bgcolor=\"#FFFFFF\""
+        "];\n",
+        output
+    );
 
-    /* Generate device nodes. */
+    fputs(
+        "    node ["
+        "style=filled, "
+        "fontname=\"Helvetica\", "
+        "fontsize=10"
+        "];\n",
+        output
+    );
 
-    size_t deviceIndex = 0;
+    fputs(
+        "    edge ["
+        "fontname=\"Helvetica\", "
+        "fontsize=9, "
+        "color=\"#526273\""
+        "];\n\n",
+        output
+    );
 
-    for (
-        const Device * device = topology->devices;
-        device != NULL;
-        device = device->next
-    ) {
-        _writeDeviceNode(output, device, deviceIndex);
-        ++deviceIndex;
-    }
+    /* Generate network clusters and their devices. */
 
-    fputc('\n', output);
+    _writeNetworkClusters(output, topology);
 
-    /* Generate network nodes. */
+    /* Generate routers and devices outside network clusters. */
 
-    _writeNetworkNodes(output, topology);
+    _writeExternalDeviceNodes(output, topology);
 
     fputc('\n', output);
 

@@ -1,0 +1,68 @@
+topology EnterpriseCampus {
+
+network ADMIN 192.168.10.0/24
+network USERS 192.168.20.0/24
+network SERVERS 192.168.30.0/24
+network TRANSIT 10.0.0.0/30
+
+router R1 {
+    interface eth0 192.168.10.1/24 network ADMIN
+    interface eth1 192.168.20.1/24 network USERS
+    interface eth2 10.0.0.1/30 network TRANSIT
+
+    route 192.168.30.0/24 via 10.0.0.2
+}
+
+router R2 {
+    interface eth0 192.168.30.1/24 network SERVERS
+    interface eth1 10.0.0.2/30 network TRANSIT
+
+    route 192.168.10.0/24 via 10.0.0.1
+    route 192.168.20.0/24 via 10.0.0.1
+}
+
+switch SW1 {
+    interface port1 network ADMIN
+    interface port2 network ADMIN
+    interface port3 network ADMIN
+}
+
+switch SW2 {
+    interface port1 network USERS
+    interface port2 network USERS
+    interface port3 network USERS
+}
+
+host PC_ADMIN {
+    interface eth0 192.168.10.10/24 network ADMIN
+}
+
+host LAPTOP_ADMIN {
+    interface eth0 192.168.10.11/24 network ADMIN
+}
+
+host PC_USER {
+    interface eth0 192.168.20.10/24 network USERS
+}
+
+host LAPTOP_USER {
+    interface eth0 192.168.20.11/24 network USERS
+}
+
+host SERVER {
+    interface eth0 192.168.30.10/24 network SERVERS
+}
+
+connect R1.eth0 SW1.port1
+connect PC_ADMIN.eth0 SW1.port2
+connect LAPTOP_ADMIN.eth0 SW1.port3
+
+connect R1.eth1 SW2.port1
+connect PC_USER.eth0 SW2.port2
+connect LAPTOP_USER.eth0 SW2.port3
+
+connect R1.eth2 R2.eth1
+
+connect R2.eth0 SERVER.eth0
+
+}
